@@ -97,14 +97,13 @@ int main(void)
     glfwGetWindowSize(win, &width, &height);
 
     /* OpenGL */
-    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glewExperimental = 1;
     if (glewInit() != GLEW_OK) {
         fprintf(stderr, "Failed to setup GLEW\n");
         exit(1);
     }
 
-    ctx = nk_glfw3_init(win, NK_GLFW3_INSTALL_CALLBACKS);
+    ctx = nk_glfw3_init(win, NK_GLFW3_INSTALL_CALLBACKS, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
     /* Load Fonts: if none of these are loaded a default font will be used  */
     /* Load Cursor: if you uncomment cursor loading please hide the cursor */
     {struct nk_font_atlas *atlas;
@@ -182,15 +181,11 @@ int main(void)
 
         /* Draw */
         glfwGetWindowSize(win, &width, &height);
-        glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(bg.r, bg.g, bg.b, bg.a);
-        /* IMPORTANT: `nk_glfw_render` modifies some global OpenGL state
-         * with blending, scissor, face culling, depth test and viewport and
-         * defaults everything back into a default state.
-         * Make sure to either a.) save and restore or b.) reset your own state after
-         * rendering the UI. */
-        nk_glfw3_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
+        sg_pass_action pass_action = {0};
+        sg_begin_default_pass(&pass_action, width, height);
+        nk_glfw3_render(NK_ANTI_ALIASING_ON);
+        sg_end_pass();
+        sg_commit();
         glfwSwapBuffers(win);
     }
     nk_glfw3_shutdown();
